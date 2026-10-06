@@ -1,0 +1,27 @@
+import { useLayoutEffect, useState, type RefObject } from "react";
+
+export const useElementSize = (ref: RefObject<HTMLElement | null>) => {
+  const [size, setSize] = useState({ width: 0, height: 0 });
+
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const update = () => {
+      const width = element.clientWidth;
+      const height = element.clientHeight;
+      setSize((prev) =>
+        prev.width === width && prev.height === height
+          ? prev
+          : { width, height },
+      );
+    };
+
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [ref]);
+
+  return size;
+};
