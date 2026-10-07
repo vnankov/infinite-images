@@ -48,7 +48,6 @@ export const getVisibleSlides = (
   layout: SlideLayout,
   scrollLeft: number,
   viewportWidth: number,
-  gap: number,
   overscanBefore = 600,
   overscanAfter = overscanBefore,
 ): VisibleSlide[] => {
@@ -57,25 +56,25 @@ export const getVisibleSlides = (
 
   const viewStart = scrollLeft - overscanBefore;
   const viewEnd = scrollLeft + viewportWidth + overscanAfter;
-  const offset = ((viewStart % loopWidth) + loopWidth) % loopWidth;
-  let index = findSlideIndex(starts, offset);
-  let worldX = viewStart - (offset - starts[index]);
+  if (viewEnd <= 0 || viewStart >= loopWidth) return [];
 
+  let index = findSlideIndex(
+    starts,
+    Math.min(Math.max(viewStart, 0), starts[starts.length - 1]),
+  );
   const slides: VisibleSlide[] = [];
-  const seen = new Map<number, number>();
-  const limit = widths.length * 6 + 32;
 
-  for (let i = 0; i < limit && worldX < viewEnd; i += 1) {
-    const occurrence = (seen.get(index) ?? 0) + 1;
-    seen.set(index, occurrence);
+  for (; index < widths.length; index += 1) {
+    const left = starts[index];
+    const width = widths[index];
+    if (left >= viewEnd) break;
+    if (left + width <= viewStart) continue;
     slides.push({
-      key: `${index}:${occurrence}`,
+      key: String(index),
       index,
-      left: worldX,
-      width: widths[index],
+      left,
+      width,
     });
-    worldX += widths[index] + gap;
-    index = (index + 1) % widths.length;
   }
 
   return slides;

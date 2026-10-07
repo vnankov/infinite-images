@@ -11,102 +11,107 @@ export type { CarouselImage };
 
 export type InfiniteCarouselProps = {
   images: CarouselImage[];
+  rangeStart: number;
+  onViewportChange: (minIndex: number, maxIndex: number) => void;
   height?: string;
   gap?: number;
   className?: string;
 };
 
-const wrapScroll = (
-  element: HTMLDivElement,
-  loopWidth: number,
-  contentWidth: number,
-  viewportWidth: number,
-  origin: number,
-) => {
-  if (loopWidth <= 0 || viewportWidth <= 0) return;
-
-  const maxScroll = Math.max(0, contentWidth - viewportWidth);
-  if (element.scrollLeft < loopWidth) {
-    const jumps = Math.ceil((origin - element.scrollLeft) / loopWidth);
-    element.scrollLeft += jumps * loopWidth;
-  } else if (element.scrollLeft > maxScroll - loopWidth) {
-    const jumps = Math.ceil((element.scrollLeft - origin) / loopWidth);
-    element.scrollLeft -= jumps * loopWidth;
-  }
-};
-
 const InfiniteCarousel = ({
   images,
+  rangeStart,
+  onViewportChange,
   height,
   gap = 12,
   className,
 }: InfiniteCarouselProps) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const placedRef = useRef(false);
-  const loopWidthRef = useRef(0);
-  const imagesRef = useRef(images);
-  const { width: viewportWidth, height: trackHeight } =
-    useElementSize(scrollerRef);
+  const prevStartRef = useRef(rangeStart);
+  const prevImagesRef = useRef(images);
+  const prevLoopRef = useRef(0);
+  const latestScrollRef = useRef(0);
+  const ignoreScrollRef = useRef(false);
+  const onViewportChangeRef = useRef(onViewportChange);
+  if (rangeStart !== prevStartRef.current) ignoreScrollRef.current = true;
+  const { width: viewportWidth, height: trackHeight } = useElementSize(scrollerRef);
   const [scrollLeft, setScrollLeft] = useState(0);
 
-  if (imagesRef.current !== images) {
-    imagesRef.current = images;
-    placedRef.current = false;
-  }
+  onViewportChangeRef.current = onViewportChange;
 
   const layout = useMemo(
     () => layoutSlides(images, trackHeight, gap),
     [images, trackHeight, gap],
   );
 
-  const copies = useMemo(() => {
-    if (layout.loopWidth <= 0 || viewportWidth <= 0) return 3;
-    return Math.max(
-      3,
-      Math.ceil((viewportWidth * 2 + layout.loopWidth) / layout.loopWidth) + 2,
-    );
-  }, [layout.loopWidth, viewportWidth]);
-
-  const lastScrollRef = useRef(0);
-  const contentWidth = layout.loopWidth * copies;
-  const origin = layout.loopWidth * Math.floor(copies / 2);
+  const contentWidth = layout.loopWidth;
   const renderOverscan = Math.max(viewportWidth * 8, 4000);
   const prefetchAhead = Math.max(viewportWidth * 16, 8000);
   const prefetchBehind = Math.max(viewportWidth * 4, 2000);
-
-  const metricsRef = useRef({
-    loopWidth: layout.loopWidth,
-    contentWidth,
-    viewportWidth,
-    origin,
-  });
-  metricsRef.current = {
-    loopWidth: layout.loopWidth,
-    contentWidth,
-    viewportWidth,
-    origin,
-  };
+  const lastScrollRef = useRef(0);
 
   useLayoutEffect(() => {
     const element = scrollerRef.current;
-    if (!element || layout.loopWidth <= 0 || viewportWidth <= 0) return;
-
-    const previousLoop = loopWidthRef.current;
-    if (!placedRef.current) {
-      element.scrollLeft = origin;
-      placedRef.current = true;
-    } else if (previousLoop > 0) {
-      const offset =
-        ((element.scrollLeft % previousLoop) + previousLoop) % previousLoop;
-      element.scrollLeft = origin + offset * (layout.loopWidth / previousLoop);
-    } else {
-      element.scrollLeft = origin;
+    if (!element || images.length === 0 || layout.loopWidth <= 0 || viewportWidth <= 0) {
+      ignoreScrollRef.current = false;
+      return;
+    }
+    if (trackHeight <= 0) {
+      ignoreScrollRef.current = false;
+      return;
     }
 
-    loopWidthRef.current = layout.loopWidth;
-    wrapScroll(element, layout.loopWidth, contentWidth, viewportWidth, origin);
-    setScrollLeft(element.scrollLeft);
-  }, [origin, layout.loopWidth, contentWidth, viewportWidth, images]);
+    const previousStart = prevStartRef.current;
+    const previousImages = prevImagesRef.current;
+    const delta = rangeStart - previousStart;
+    // Shrinking the track clamps scrollLeft before this effect runs. The React
+    // state and the ref still hold the position from before that clamp.
+    const baseScroll = Math.max(scrollLeft, latestScrollRef.current);
+    let nextScroll = element.scrollLeft;
+
+    if (!placedRef.current) {
+      const originLocal = Math.min(images.length - 1, Math.max(0, -rangeStart));
+      nextScroll = layout.starts[originLocal] ?? 0;
+      placedRef.current = true;
+    } else if (delta > 0) {
+      const removedWidth = layoutSlides(
+        previousImages.slice(0, delta),
+        trackHeight,
+        gap,
+      ).loopWidth;
+      nextScroll = Math.max(0, baseScroll - removedWidth);
+    } else if (delta < 0) {
+      const addedWidth = layoutSlides(images.slice(0, -delta), trackHeight, gap).loopWidth;
+      nextScroll = baseScroll + addedWidth;
+    } else if (
+      previousImages.length === images.length &&
+      prevLoopRef.current > 0 &&
+      prevLoopRef.current !== layout.loopWidth
+    ) {
+      nextScroll = baseScroll * (layout.loopWidth / prevLoopRef.current);
+    }
+
+    const maxScroll = Math.max(0, layout.loopWidth - viewportWidth);
+    nextScroll = Math.min(Math.max(0, nextScroll), maxScroll);
+    if (element.scrollLeft !== nextScroll) element.scrollLeft = nextScroll;
+    latestScrollRef.current = element.scrollLeft;
+    ignoreScrollRef.current = false;
+
+    prevStartRef.current = rangeStart;
+    prevImagesRef.current = images;
+    prevLoopRef.current = layout.loopWidth;
+
+    if (element.scrollLeft !== scrollLeft) setScrollLeft(element.scrollLeft);
+
+    const visible = getVisibleSlides(layout, element.scrollLeft, viewportWidth, 0, 0);
+    if (visible.length > 0) {
+      onViewportChangeRef.current(
+        rangeStart + visible[0].index,
+        rangeStart + visible[visible.length - 1].index,
+      );
+    }
+  }, [gap, images, layout, rangeStart, scrollLeft, trackHeight, viewportWidth]);
 
   useLayoutEffect(() => {
     const element = scrollerRef.current;
@@ -114,14 +119,8 @@ const InfiniteCarousel = ({
 
     let frame = 0;
     const onScroll = () => {
-      const metrics = metricsRef.current;
-      wrapScroll(
-        element,
-        metrics.loopWidth,
-        metrics.contentWidth,
-        metrics.viewportWidth,
-        metrics.origin,
-      );
+      if (ignoreScrollRef.current) return;
+      latestScrollRef.current = element.scrollLeft;
       if (frame) return;
       frame = requestAnimationFrame(() => {
         frame = 0;
@@ -159,11 +158,15 @@ const InfiniteCarousel = ({
         layout,
         scrollLeft,
         viewportWidth,
-        gap,
         renderOverscan,
         renderOverscan,
       ),
-    [layout, scrollLeft, viewportWidth, gap, renderOverscan],
+    [layout, scrollLeft, viewportWidth, renderOverscan],
+  );
+
+  const inView = useMemo(
+    () => getVisibleSlides(layout, scrollLeft, viewportWidth, 0, 0),
+    [layout, scrollLeft, viewportWidth],
   );
 
   useEffect(() => {
@@ -175,7 +178,6 @@ const InfiniteCarousel = ({
       layout,
       scrollLeft,
       viewportWidth,
-      gap,
       before,
       after,
     );
@@ -191,19 +193,30 @@ const InfiniteCarousel = ({
     scrollLeft,
     viewportWidth,
     trackHeight,
-    gap,
     scrollingRight,
     prefetchAhead,
     prefetchBehind,
   ]);
 
   const heightStyle = height ? { height } : undefined;
+  const firstLabel = inView.length > 0 ? rangeStart + inView[0].index + 1 : rangeStart + 1;
+  const lastLabel =
+    inView.length > 0
+      ? rangeStart + inView[inView.length - 1].index + 1
+      : firstLabel;
 
   return (
     <div
       className={["carousel", className].filter(Boolean).join(" ")}
       style={heightStyle}
     >
+      <p className="carousel-meta">
+        {firstLabel === lastLabel
+          ? firstLabel.toLocaleString()
+          : `${firstLabel.toLocaleString()}–${lastLabel.toLocaleString()}`}
+        {" · "}
+        {images.length.toLocaleString()} in memory
+      </p>
       <div
         ref={scrollerRef}
         className="carousel-scroller"
@@ -219,11 +232,12 @@ const InfiniteCarousel = ({
               const image = images[slide.index];
               return (
                 <CarouselSlide
-                  key={slide.key}
+                  key={image.id}
                   image={image}
                   width={slide.width}
                   height={trackHeight}
                   left={slide.left}
+                  indexLabel={rangeStart + slide.index + 1}
                 />
               );
             })}

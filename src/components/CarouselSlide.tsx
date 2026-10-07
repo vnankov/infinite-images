@@ -7,9 +7,16 @@ type CarouselSlideProps = {
   width: number;
   height: number;
   left: number;
+  indexLabel: number;
 };
 
-const CarouselSlide = ({ image, width, height, left }: CarouselSlideProps) => {
+const CarouselSlide = ({
+  image,
+  width,
+  height,
+  left,
+  indexLabel,
+}: CarouselSlideProps) => {
   const src = useMemo(
     () => resolveImageSrc(image, width, height),
     [image, width, height],
@@ -35,6 +42,7 @@ const CarouselSlide = ({ image, width, height, left }: CarouselSlideProps) => {
           event.currentTarget.style.visibility = "hidden";
         }}
       />
+      <span className="carousel-slide-index">{indexLabel.toLocaleString()}</span>
     </figure>
   );
 };

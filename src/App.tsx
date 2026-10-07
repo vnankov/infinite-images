@@ -1,43 +1,28 @@
-import { useEffect, useState } from "react";
-import { fetchPicsumImages } from "./api/picsum";
+import { fetchImageRange } from "./api/picsum";
 import InfiniteCarousel from "./components/InfiniteCarousel";
-import type { CarouselImage } from "./types/carousel";
+import { useSlidingWindow } from "./hooks/useSlidingWindow";
 
-const IMAGE_COUNT = 1000;
+const BATCH_SIZE = 1000;
+const FETCH_AT = 800;
 
 const App = () => {
-  const [images, setImages] = useState<CarouselImage[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const { images, rangeStart, ready, error, onViewportChange } = useSlidingWindow(
+    fetchImageRange,
+    BATCH_SIZE,
+    FETCH_AT,
+  );
 
-  useEffect(() => {
-    let cancelled = false;
-
-    fetchPicsumImages(IMAGE_COUNT)
-      .then((result) => {
-        if (!cancelled) setImages(result);
-      })
-      .catch((reason: unknown) => {
-        if (!cancelled) {
-          setError(reason instanceof Error ? reason.message : "Could not load images");
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (error) {
-    return <main className="app-status">{error}</main>;
-  }
-
-  if (images.length === 0) {
-    return <main className="app-status">Loading images…</main>;
+  if (!ready) {
+    return <main className="app-status">{error ?? "Loading images…"}</main>;
   }
 
   return (
     <main className="app">
-      <InfiniteCarousel images={images} />
+      <InfiniteCarousel
+        images={images}
+        rangeStart={rangeStart}
+        onViewportChange={onViewportChange}
+      />
     </main>
   );
 };
