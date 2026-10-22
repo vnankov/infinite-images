@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import CarouselSlide from "./CarouselSlide";
 import { getVisibleSlides, layoutSlides } from "../utils/carouselLayout";
+import { wrapScroll } from "../utils/wrapScroll";
 import { preloadImages } from "../utils/preloadImages";
 import { resolveImageSrc } from "../utils/resolveImageSrc";
 import { useElementSize } from "../hooks/useElementSize";
@@ -14,25 +15,6 @@ export type InfiniteCarouselProps = {
   height?: string;
   gap?: number;
   className?: string;
-};
-
-const wrapScroll = (
-  element: HTMLDivElement,
-  loopWidth: number,
-  contentWidth: number,
-  viewportWidth: number,
-  origin: number,
-) => {
-  if (loopWidth <= 0 || viewportWidth <= 0) return;
-
-  const maxScroll = Math.max(0, contentWidth - viewportWidth);
-  if (element.scrollLeft < loopWidth) {
-    const jumps = Math.ceil((origin - element.scrollLeft) / loopWidth);
-    element.scrollLeft += jumps * loopWidth;
-  } else if (element.scrollLeft > maxScroll - loopWidth) {
-    const jumps = Math.ceil((element.scrollLeft - origin) / loopWidth);
-    element.scrollLeft -= jumps * loopWidth;
-  }
 };
 
 const InfiniteCarousel = ({
