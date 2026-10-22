@@ -60,7 +60,7 @@ Slides are mounted at least 8 viewports past each edge, and never less than 4,00
 
 ## Image loading
 
-A failed image is hidden and requested again. Each failure waits twice as long as the last, from 1s up to 8s. Coming back online retries immediately. A new `src` clears the failure and shows the replacement. A successful load shows the image again.
+A failed image is hidden and requested again. Each failure waits twice as long as the last: 1s, 2s, 4s, then 8s. After those four retries the slide stays hidden, so a blocked URL is not requested forever. Coming back online retries immediately until that limit. A new `src` clears the failure and shows the replacement. A successful load shows the image again.
 
 ## Setup after cloning
 
