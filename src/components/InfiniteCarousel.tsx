@@ -19,22 +19,38 @@ export type InfiniteCarouselProps = {
 
 const DEFAULT_GAP_PX = 12;
 
-/** Three copies leave a middle one, so scrolling can wrap in both directions. */
+/**
+ * Three copies leave a middle one, so scrolling can wrap in both directions.
+ */
 const MIN_LOOP_COPIES = 3;
-/** Copies kept on either side of the viewport when deciding how long the track is. */
+/**
+ * Copies kept on either side of the viewport when deciding how long the track
+ * is.
+ */
 const COPY_VIEWPORT_SPAN = 2;
-/** Spare copies so a wrap jump never lands on the first or last copy. */
+/**
+ * Spare copies so a wrap jump never lands on the first or last copy.
+ */
 const WRAP_BUFFER_COPIES = 2;
 
-/** Slides mounted this many viewports beyond each edge of the screen. */
+/**
+ * Slides mounted this many viewports beyond each edge of the screen.
+ */
 const RENDER_OVERSCAN_VIEWPORTS = 8;
 const MIN_RENDER_OVERSCAN_PX = 4000;
-/** Images preloaded farther ahead than behind, because that is the usual scroll direction. */
+/**
+ * Images preloaded farther ahead than behind, because that is the usual
+ * scroll direction.
+ */
 const PREFETCH_AHEAD_VIEWPORTS = 16;
 const MIN_PREFETCH_AHEAD_PX = 8000;
 const PREFETCH_BEHIND_VIEWPORTS = 4;
 const MIN_PREFETCH_BEHIND_PX = 2000;
 
+/**
+ * Scroll-only strip. Repeats the list, mounts slides near the viewport, and
+ * prefetches in the scroll direction.
+ */
 const InfiniteCarousel = ({
   images,
   height,

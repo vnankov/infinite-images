@@ -4,10 +4,16 @@ import { resolveImageSrc } from "../utils/resolveImageSrc";
 
 const RETRY_BASE_MS = 1000;
 const RETRY_MAX_MS = 8000;
-/** Each failed attempt waits twice as long, up to three doublings (1s, 2s, 4s, 8s). */
+/**
+ * Each failed attempt waits twice as long, up to three doublings
+ * (1s, 2s, 4s, 8s).
+ */
 const RETRY_BACKOFF_FACTOR = 2;
 const MAX_BACKOFF_DOUBLINGS = 3;
-/** Retries after the first load. The next failure stays hidden and is not requested again. */
+/**
+ * Retries after the first load. The next failure stays hidden and is not
+ * requested again.
+ */
 const MAX_RETRIES = MAX_BACKOFF_DOUBLINGS + 1;
 
 type CarouselSlideProps = {
@@ -17,6 +23,10 @@ type CarouselSlideProps = {
   left: number;
 };
 
+/**
+ * Draws one photo. A failed load is retried four times, then the slide stays
+ * hidden.
+ */
 const CarouselSlide = ({ image, width, height, left }: CarouselSlideProps) => {
   const src = useMemo(
     () => resolveImageSrc(image, width, height),

@@ -8,10 +8,16 @@ type PicsumPhoto = {
 };
 
 const PAGE_SIZE = 100;
-/** Cap retina requests so a 3x display does not download a 3x photo. */
+/**
+ * Cap retina requests so a 3x display does not download a 3x photo.
+ */
 const MAX_DEVICE_PIXEL_RATIO = 2;
 const MIN_REQUESTED_PIXELS = 1;
 
+/**
+ * Downloads the Picsum list and maps each photo to a carousel image with a
+ * size-aware URL.
+ */
 export const fetchPicsumImages = async (
   count: number,
 ): Promise<CarouselImage[]> => {

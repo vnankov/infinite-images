@@ -5,6 +5,10 @@ import type { CarouselImage } from "./types/carousel";
 
 const IMAGE_COUNT = 1000;
 
+/**
+ * Loads the demo photos, then renders the carousel. Shows a status line while
+ * loading or on failure.
+ */
 const App = () => {
   const [images, setImages] = useState<CarouselImage[]>([]);
   const [error, setError] = useState<string | null>(null);

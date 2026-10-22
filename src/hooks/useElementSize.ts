@@ -1,5 +1,9 @@
 import { useLayoutEffect, useState, type RefObject } from "react";
 
+/**
+ * Watches an element's width and height, including the measurement taken
+ * before the first paint.
+ */
 export const useElementSize = (ref: RefObject<HTMLElement | null>) => {
   const [size, setSize] = useState({ width: 0, height: 0 });
 
