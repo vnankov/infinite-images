@@ -62,6 +62,7 @@ Vite prints a local URL (usually `http://localhost:5173`). Open it in the browse
 ### Other scripts
 
 ```bash
+npm test          # Run the unit and component tests
 npm run build     # Typecheck and production build
 npm run preview   # Serve the production build locally
 ```
