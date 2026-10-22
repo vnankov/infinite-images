@@ -1,5 +1,10 @@
 import type { CarouselImage } from "../types/carousel";
 
+/** Avoid a zero or negative slide size when the photo or the track has no height. */
+const MIN_EDGE_PX = 1;
+/** Fallback distance, in pixels, to mount slides outside the viewport. */
+const DEFAULT_OVERSCAN_PX = 600;
+
 export type SlideLayout = {
   widths: number[];
   starts: number[];
@@ -12,8 +17,8 @@ export const layoutSlides = (
   gap: number,
 ): SlideLayout => {
   const widths = images.map((image) => {
-    const ratio = image.width / Math.max(image.height, 1);
-    return Math.max(1, ratio * height);
+    const ratio = image.width / Math.max(image.height, MIN_EDGE_PX);
+    return Math.max(MIN_EDGE_PX, ratio * height);
   });
 
   const starts: number[] = [];
@@ -49,7 +54,7 @@ export const getVisibleSlides = (
   scrollLeft: number,
   viewportWidth: number,
   gap: number,
-  overscanBefore = 600,
+  overscanBefore = DEFAULT_OVERSCAN_PX,
   overscanAfter = overscanBefore,
 ): VisibleSlide[] => {
   const { widths, starts, loopWidth } = layout;

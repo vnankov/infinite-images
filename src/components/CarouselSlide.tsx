@@ -4,6 +4,9 @@ import { resolveImageSrc } from "../utils/resolveImageSrc";
 
 const RETRY_BASE_MS = 1000;
 const RETRY_MAX_MS = 8000;
+/** Each failed attempt waits twice as long, up to three doublings (1s, 2s, 4s, 8s). */
+const RETRY_BACKOFF_FACTOR = 2;
+const MAX_BACKOFF_DOUBLINGS = 3;
 
 type CarouselSlideProps = {
   image: CarouselImage;
@@ -29,7 +32,10 @@ const CarouselSlide = ({ image, width, height, left }: CarouselSlideProps) => {
   useEffect(() => {
     if (failedAttempt === null || failedAttempt !== attempt) return;
 
-    const delay = Math.min(RETRY_MAX_MS, RETRY_BASE_MS * 2 ** Math.min(attempt, 3));
+    const delay = Math.min(
+      RETRY_MAX_MS,
+      RETRY_BASE_MS * RETRY_BACKOFF_FACTOR ** Math.min(attempt, MAX_BACKOFF_DOUBLINGS),
+    );
     const timer = window.setTimeout(() => {
       setAttempt((current) => (current === attempt ? current + 1 : current));
     }, delay);

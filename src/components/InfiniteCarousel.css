@@ -1,7 +1,9 @@
 .carousel {
+  --carousel-preferred-height: 70vh;
+  --carousel-max-height: 560px;
   position: relative;
   width: 100%;
-  height: min(70vh, 560px);
+  height: min(var(--carousel-preferred-height), var(--carousel-max-height));
   min-width: 0;
   min-height: 0;
   overflow: hidden;

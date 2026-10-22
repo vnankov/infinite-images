@@ -17,10 +17,28 @@ export type InfiniteCarouselProps = {
   className?: string;
 };
 
+const DEFAULT_GAP_PX = 12;
+
+/** Three copies leave a middle one, so scrolling can wrap in both directions. */
+const MIN_LOOP_COPIES = 3;
+/** Copies kept on either side of the viewport when deciding how long the track is. */
+const COPY_VIEWPORT_SPAN = 2;
+/** Spare copies so a wrap jump never lands on the first or last copy. */
+const WRAP_BUFFER_COPIES = 2;
+
+/** Slides mounted this many viewports beyond each edge of the screen. */
+const RENDER_OVERSCAN_VIEWPORTS = 8;
+const MIN_RENDER_OVERSCAN_PX = 4000;
+/** Images preloaded farther ahead than behind, because that is the usual scroll direction. */
+const PREFETCH_AHEAD_VIEWPORTS = 16;
+const MIN_PREFETCH_AHEAD_PX = 8000;
+const PREFETCH_BEHIND_VIEWPORTS = 4;
+const MIN_PREFETCH_BEHIND_PX = 2000;
+
 const InfiniteCarousel = ({
   images,
   height,
-  gap = 12,
+  gap = DEFAULT_GAP_PX,
   className,
 }: InfiniteCarouselProps) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -42,19 +60,30 @@ const InfiniteCarousel = ({
   );
 
   const copies = useMemo(() => {
-    if (layout.loopWidth <= 0 || viewportWidth <= 0) return 3;
+    if (layout.loopWidth <= 0 || viewportWidth <= 0) return MIN_LOOP_COPIES;
     return Math.max(
-      3,
-      Math.ceil((viewportWidth * 2 + layout.loopWidth) / layout.loopWidth) + 2,
+      MIN_LOOP_COPIES,
+      Math.ceil(
+        (viewportWidth * COPY_VIEWPORT_SPAN + layout.loopWidth) / layout.loopWidth,
+      ) + WRAP_BUFFER_COPIES,
     );
   }, [layout.loopWidth, viewportWidth]);
 
   const lastScrollRef = useRef(0);
   const contentWidth = layout.loopWidth * copies;
   const origin = layout.loopWidth * Math.floor(copies / 2);
-  const renderOverscan = Math.max(viewportWidth * 8, 4000);
-  const prefetchAhead = Math.max(viewportWidth * 16, 8000);
-  const prefetchBehind = Math.max(viewportWidth * 4, 2000);
+  const renderOverscan = Math.max(
+    viewportWidth * RENDER_OVERSCAN_VIEWPORTS,
+    MIN_RENDER_OVERSCAN_PX,
+  );
+  const prefetchAhead = Math.max(
+    viewportWidth * PREFETCH_AHEAD_VIEWPORTS,
+    MIN_PREFETCH_AHEAD_PX,
+  );
+  const prefetchBehind = Math.max(
+    viewportWidth * PREFETCH_BEHIND_VIEWPORTS,
+    MIN_PREFETCH_BEHIND_PX,
+  );
 
   const metricsRef = useRef({
     loopWidth: layout.loopWidth,

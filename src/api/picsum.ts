@@ -8,6 +8,9 @@ type PicsumPhoto = {
 };
 
 const PAGE_SIZE = 100;
+/** Cap retina requests so a 3x display does not download a 3x photo. */
+const MAX_DEVICE_PIXEL_RATIO = 2;
+const MIN_REQUESTED_PIXELS = 1;
 
 export const fetchPicsumImages = async (
   count: number,
@@ -36,9 +39,9 @@ export const fetchPicsumImages = async (
       height: photo.height,
       alt: `Photo by ${photo.author}`,
       src: (displayWidth, displayHeight) => {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const w = Math.max(1, Math.round(displayWidth * dpr));
-        const h = Math.max(1, Math.round(displayHeight * dpr));
+        const dpr = Math.min(window.devicePixelRatio || 1, MAX_DEVICE_PIXEL_RATIO);
+        const w = Math.max(MIN_REQUESTED_PIXELS, Math.round(displayWidth * dpr));
+        const h = Math.max(MIN_REQUESTED_PIXELS, Math.round(displayHeight * dpr));
         return `https://picsum.photos/id/${photo.id}/${w}/${h}`;
       },
     }));
