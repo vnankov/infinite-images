@@ -63,9 +63,11 @@ export const getVisibleSlides = (
 
   const slides: VisibleSlide[] = [];
   const seen = new Map<number, number>();
-  const limit = widths.length * 6 + 32;
 
-  for (let i = 0; i < limit && worldX < viewEnd; i += 1) {
+  while (worldX < viewEnd) {
+    const stride = widths[index] + gap;
+    if (stride <= 0) break;
+
     const occurrence = (seen.get(index) ?? 0) + 1;
     seen.set(index, occurrence);
     slides.push({
@@ -74,7 +76,7 @@ export const getVisibleSlides = (
       left: worldX,
       width: widths[index],
     });
-    worldX += widths[index] + gap;
+    worldX += stride;
     index = (index + 1) % widths.length;
   }
 
