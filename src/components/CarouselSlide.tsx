@@ -4,9 +4,17 @@ import { resolveImageSrc } from "../utils/resolveImageSrc";
 
 const RETRY_BASE_MS = 1000;
 const RETRY_MAX_MS = 8000;
-/** Each failed attempt waits twice as long, up to three doublings (1s, 2s, 4s, 8s). */
+/**
+ * Each failed attempt waits twice as long, up to three doublings
+ * (1s, 2s, 4s, 8s).
+ */
 const RETRY_BACKOFF_FACTOR = 2;
 const MAX_BACKOFF_DOUBLINGS = 3;
+/**
+ * Retries after the first load. The next failure stays hidden and is not
+ * requested again.
+ */
+const MAX_RETRIES = MAX_BACKOFF_DOUBLINGS + 1;
 
 type CarouselSlideProps = {
   image: CarouselImage;
@@ -16,6 +24,10 @@ type CarouselSlideProps = {
   indexLabel: number;
 };
 
+/**
+ * Draws one photo and its index. A failed load is retried four times, then
+ * the slide stays hidden.
+ */
 const CarouselSlide = ({
   image,
   width,
@@ -37,7 +49,9 @@ const CarouselSlide = ({
   }
 
   useEffect(() => {
-    if (failedAttempt === null || failedAttempt !== attempt) return;
+    if (failedAttempt === null || failedAttempt !== attempt || attempt >= MAX_RETRIES) {
+      return;
+    }
 
     const delay = Math.min(
       RETRY_MAX_MS,

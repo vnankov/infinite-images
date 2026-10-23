@@ -1,8 +1,13 @@
 import type { CarouselImage } from "../types/carousel";
 
-/** Avoid a zero or negative slide size when the photo or the track has no height. */
+/**
+ * Avoid a zero or negative slide size when the photo or the track has no
+ * height.
+ */
 const MIN_EDGE_PX = 1;
-/** Fallback distance, in pixels, to mount slides outside the viewport. */
+/**
+ * Fallback distance, in pixels, to mount slides outside the viewport.
+ */
 const DEFAULT_OVERSCAN_PX = 600;
 
 export type SlideLayout = {
@@ -11,6 +16,10 @@ export type SlideLayout = {
   loopWidth: number;
 };
 
+/**
+ * Sizes each slide from its aspect ratio at the track height, and records
+ * where that slide starts.
+ */
 export const layoutSlides = (
   images: CarouselImage[],
   height: number,
@@ -31,6 +40,10 @@ export const layoutSlides = (
   return { widths, starts, loopWidth: x };
 };
 
+/**
+ * Finds the slide whose start position is at or just before this offset
+ * inside one loop.
+ */
 const findSlideIndex = (starts: number[], offset: number) => {
   let low = 0;
   let high = starts.length - 1;
@@ -49,6 +62,10 @@ export type VisibleSlide = {
   width: number;
 };
 
+/**
+ * Lists every loaded slide that intersects the viewport plus overscan.
+ * The walk stops at the end of the list.
+ */
 export const getVisibleSlides = (
   layout: SlideLayout,
   scrollLeft: number,

@@ -5,6 +5,10 @@ import { useSlidingWindow } from "./hooks/useSlidingWindow";
 const BATCH_SIZE = 1000;
 const FETCH_AT = 800;
 
+/**
+ * Loads the demo photos, then renders the carousel. Shows a status line while
+ * loading or on failure.
+ */
 const App = () => {
   const { images, rangeStart, ready, error, onViewportChange } = useSlidingWindow(
     fetchImageRange,

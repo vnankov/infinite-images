@@ -20,15 +20,24 @@ export type InfiniteCarouselProps = {
 
 const DEFAULT_GAP_PX = 12;
 
-/** Slides mounted this many viewports beyond each edge of the screen. */
+/**
+ * Slides mounted this many viewports beyond each edge of the screen.
+ */
 const RENDER_OVERSCAN_VIEWPORTS = 8;
 const MIN_RENDER_OVERSCAN_PX = 4000;
-/** Images preloaded farther ahead than behind, because that is the usual scroll direction. */
+/**
+ * Images preloaded farther ahead than behind, because that is the usual
+ * scroll direction.
+ */
 const PREFETCH_AHEAD_VIEWPORTS = 16;
 const MIN_PREFETCH_AHEAD_PX = 8000;
 const PREFETCH_BEHIND_VIEWPORTS = 4;
 const MIN_PREFETCH_BEHIND_PX = 2000;
 
+/**
+ * Scroll-only strip. Mounts the slides near the viewport, anchors scroll when
+ * the image window changes, and prefetches in the scroll direction.
+ */
 const InfiniteCarousel = ({
   images,
   rangeStart,

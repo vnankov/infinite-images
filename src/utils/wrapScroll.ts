@@ -1,3 +1,7 @@
+/**
+ * Jumps `scrollLeft` by whole loops when the view nears either end, so the
+ * repeated track feels endless.
+ */
 export const wrapScroll = (
   element: HTMLDivElement,
   loopWidth: number,

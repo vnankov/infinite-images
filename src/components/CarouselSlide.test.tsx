@@ -83,6 +83,33 @@ describe("CarouselSlide", () => {
     expect(img().style.visibility).toBe("");
   });
 
+  it("stops requesting a source after four failed retries", async () => {
+    vi.useFakeTimers();
+    try {
+      const { img } = renderSlide("https://example.test/blocked.jpg");
+      const waits = [1000, 2000, 4000, 8000];
+
+      for (const wait of waits) {
+        fireEvent.error(img());
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(wait);
+        });
+      }
+
+      const lastRequest = img();
+      fireEvent.error(lastRequest);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(60_000);
+      });
+      window.dispatchEvent(new Event("online"));
+
+      expect(img()).toBe(lastRequest);
+      expect(img().style.visibility).toBe("hidden");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("refetches a failed image and shows it when the next load succeeds", async () => {
     vi.useFakeTimers();
     try {

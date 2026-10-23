@@ -9,7 +9,9 @@ type PicsumPhoto = {
 
 const PAGE_SIZE = 100;
 const PAGE_COUNT = 10;
-/** Cap retina requests so a 3x display does not download a 3x photo. */
+/**
+ * Cap retina requests so a 3x display does not download a 3x photo.
+ */
 const MAX_DEVICE_PIXEL_RATIO = 2;
 const MIN_REQUESTED_PIXELS = 1;
 
@@ -57,8 +59,10 @@ const toCarouselImage = (photo: PicsumPhoto, index: number): CarouselImage => ({
   },
 });
 
-// The Picsum list is a single 1,000-photo document. Later ranges reuse it with
-// new indexes so the carousel can scroll without holding every page in memory.
+/**
+ * Builds `count` carousel images from an absolute start index.
+ * Indexes past the Picsum catalog reuse its photos.
+ */
 export const fetchImageRange = async (
   start: number,
   count: number,
