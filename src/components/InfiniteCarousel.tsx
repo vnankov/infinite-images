@@ -8,8 +8,6 @@ import { useElementSize } from "../hooks/useElementSize";
 import type { CarouselImage } from "../types/carousel";
 import "./InfiniteCarousel.css";
 
-export type { CarouselImage };
-
 export type InfiniteCarouselProps = {
   images: CarouselImage[];
   height?: string;
